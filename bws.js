@@ -114,6 +114,7 @@ function explode(at, num)
 
 function addObject( geometry, material, x, y, z, ry )
 {
+    ry = ry || 0;
     var tmpMesh = new THREE.Mesh( geometry, material );
 
     THREE.ColorUtils.adjustHSV( tmpMesh.material.color, 0.1, -0.1, 0 );
@@ -157,7 +158,7 @@ spawn: function(target) {
 function Dopey(startLoc)
 {
     Enemy.call(this);
-    this.mesh = addObject(Dopey.geom, Dopey.mat, startLoc.x, enemyStartHeight, startLoc.z, 0);
+    this.mesh = addObject(Dopey.geom, Dopey.mat, startLoc.x, enemyStartHeight, startLoc.z);
     this.mesh.receiveShadow = false;
     this.spawn(startLoc);
     this.radius = 60;
@@ -177,7 +178,7 @@ Dopey.prototype.update = function(delta)
     Dopey.tmp1.sub(ship.position, this.mesh.position);
     Dopey.tmp1.y = 0;
     Dopey.tmp1.normalize();
-    Dopey.tmp1.multiplyScalar(delta * 150);
+    Dopey.tmp1.multiplyScalar(delta * 200);
     this.mesh.position.addSelf(Dopey.tmp1);
 };
 
@@ -186,6 +187,43 @@ Dopey.init = function()
     Dopey.geom = new THREE.CubeGeometry(30, 30, 120);
     Dopey.mat = new THREE.MeshPhongMaterial( { shininess: 10, ambient: 0x00ff00, color: 0x00ff00 } );
 };
+
+
+function Spinner(startLoc)
+{
+    Enemy.call(this);
+    var mtop = addObject(Spinner.geomTop, Spinner.mat, 45, 0, 0);
+    mtop.receiveShadow = false;
+    var mright = addObject(Spinner.geomRight, Spinner.mat, 0, 0, 45);
+    mright.receiveShadow = false;
+    this.mesh = addObject(Spinner.geomCentre, Spinner.mat, startLoc.x, enemyStartHeight, startLoc.z);
+
+    this.mesh.add(mtop);
+    this.mesh.add(mright);
+
+    this.spawn(startLoc);
+    this.radius = 60;
+    this.hitpoints = 20;
+    this.scorePoints = 250;
+    enemies.push(this);
+}
+
+Spinner.prototype = new Enemy();
+Spinner.prototype.constructor = Spinner;
+
+Spinner.tmp1 = new THREE.Vector3();
+Spinner.prototype.update = function(delta)
+{
+    this.mesh.rotation.y += 5 * delta;
+};
+
+Spinner.init = function()
+{
+    Spinner.geomTop = new THREE.CubeGeometry(30, 30, 120);
+    Spinner.geomRight = new THREE.CubeGeometry(120, 30, 30);
+    Spinner.geomCentre = new THREE.CubeGeometry(20, 30, 20);
+    Spinner.mat = new THREE.MeshPhongMaterial( { shininess: 200, ambient: 0x0000ff, color: 0x0000ff });
+}
 
 
 function init()
@@ -293,6 +331,7 @@ function init()
     */
 
     Dopey.init();
+    Spinner.init();
 
     bullets = [];
     for (var i = 0; i < 300; i++)
@@ -654,8 +693,9 @@ function render() {
 
         if (pad.buttons[0] > .5 && !window.hacky)
         {
-            new Dopey({ x : -400, y: 115, z: -1000 });
-            new Dopey({ x : 400, y: 115, z: -1000 });
+            //new Dopey({ x : -400, y: 115, z: -1000 });
+            //new Dopey({ x : 400, y: 115, z: -1000 });
+            new Spinner({x: 0, y: 115, z: -400 });
             hacky = 1;
         }
 
