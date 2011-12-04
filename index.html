@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>Boxes Wot Shoot</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <style type="text/css">
+            body {
+                border: 0; padding: 0; margin: 0;
+                font-family: 'Segoe UI', 'Helvetica Neue', 'Arial';
+                font-size: 32px;
+                color: #fff;
+                background: black;
+                cursor: none;
+            }
+            a {
+                color: #aaa;
+                cursor: pointer;
+            }
+            #title {
+                position: absolute;
+                text-align: center;
+                width: 100%;
+                overflow: hidden;
+            }
+            #overlay {
+                position: relative;
+                width: 800px;
+                margin: auto;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -o-user-select: none;
+                user-select: none;
+                cursor: default;
+            }
+        </style>
+	</head>
+	<body>
+		<script src="three.js/build/Three.js"></script>
+		<script src="three.js/examples/js/ShaderExtras.js"></script>
+		<script src="three.js/examples/js/postprocessing/EffectComposer.js"></script>
+		<script src="three.js/examples/js/postprocessing/RenderPass.js"></script>
+		<script src="three.js/examples/js/postprocessing/BloomPass.js"></script>
+		<script src="three.js/examples/js/postprocessing/ShaderPass.js"></script>
+		<script src="three.js/examples/js/postprocessing/MaskPass.js"></script>
+		<script src="three.js/examples/js/postprocessing/SavePass.js"></script>
+		<script src="three.js/examples/js/Detector.js"></script>
+		<script src="three.js/examples/js/RequestAnimationFrame.js"></script>
+		<script src="three.js/examples/js/Stats.js"></script>
+        <script src="Tween.js"></script>
+        <script src="font.typeface.js"></script>
+        <script src="sfx.js"></script>
+        <script src="bws.js"></script>
+        <div id="title">
+        <div id="overlay">
+            <h1>
+                Boxes Wot Shoot
+            </h1>
+
+            <h3>
+                Use left stick to move, right stick to shoot.
+                Press a button on your gamepad to begin. 
+            </h3>
+
+            <p>
+                Gamepad API required. Currently available in <a
+                href="http://tools.google.com/dlpage/chromesxs">Chrome
+                Canary</a> (Windows only) and a <a
+                href="http://people.mozilla.com/~tmielczarek/gamepad/">Firefox
+                Nightly</a>. Hit F11 for the full experience.
+            </p>
+        </div>
+        </div>
+	</body>
+</html>
+
