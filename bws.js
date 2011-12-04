@@ -37,66 +37,61 @@ textMaterialSide = new THREE.MeshPhongMaterial( { color: 0xffffff, shading: THRE
 
 var mode = 'TITLE';
 
-init();
-animate();
+var numScoreDigits = 6;
+var numberPixelWidth = 48;
+var numberTexWidth = 512;
+var scoreSprites = [];
 
 function mozconnecthandler(e)
 {
     navigator.webkitGamepads = [e.gamepad];
 }
 
-function createText(text)
+function setUpScore()
 {
-    if (window.textMesh1)
-        scene.remove(textMesh1);
+    var textureNumbers = THREE.ImageUtils.loadTexture("numbers.png");
+    for (var i = 0; i < numScoreDigits; ++i)
+    {
+        var sprite = new THREE.Sprite({
+            map: textureNumbers,
+            useScreenCoordinates: true,
+            affectedByDistance: false,
+            scaleByViewport: true,
+            alignment: THREE.SpriteAlignment.bottomRight
+        });
+        sprite.uvOffset.x = 0;
+        sprite.uvScale.x = numberPixelWidth/numberTexWidth;
+        scene.add(sprite);
+        scoreSprites.push(sprite);
+    }
+    updateScoreScreenLocation();
+}
 
-    textGeo = new THREE.TextGeometry( text, {
-        size: 72,
-        height: 40,
-        curveSegments: 4,
-
-        font: "helvetiker",
-        weight: "bold",
-        style: "normal",
-
-        bevelThickness: 2,
-        bevelSize: 1.5,
-        bevelEnabled: true,
-
-        bend: false,
-
-        material: 0,
-        extrudeMaterial: 1
-    });
-
-    textGeo.materials = [ textMaterialFront, textMaterialSide ];
-
-    textGeo.computeBoundingBox();
-    textGeo.computeVertexNormals();
-
-    var centerOffset = -0.5 * ( textGeo.boundingBox.x[ 1 ] - textGeo.boundingBox.x[ 0 ] );
-
-    textMesh1 = new THREE.Mesh( textGeo, textFaceMaterial );
-
-    textMesh1.position.x = centerOffset;
-    textMesh1.position.y = 200;
-    textMesh1.position.z = -900;
-
-    textMesh1.rotation.x = 0;
-    textMesh1.rotation.y = Math.PI * 2;
-
-    scene.add( textMesh1 );
+function updateScoreScreenLocation()
+{
+    for (var i = 0; i < numScoreDigits; ++i)
+    {
+        var sprite = scoreSprites[i];
+        var screenScale = .12;
+        sprite.scale.x = screenScale * SCREEN_HEIGHT/SCREEN_WIDTH;;
+        sprite.scale.y = screenScale;
+        sprite.position.x = SCREEN_WIDTH - (numScoreDigits - i - 1) * numberPixelWidth - 10;
+        sprite.position.y = SCREEN_HEIGHT - 10;
+    }
 }
 
 function updateScores()
 {
-    /*
-    if (curScore > highScore) highScore = curScore;
-    var asStr = "" + curScore;
-    while (asStr.length < 6) asStr = "0" + asStr;
-    */
-
+    var scoreStr = "" + curScore;
+    while (scoreStr.length < numScoreDigits) scoreStr = "0" + scoreStr;
+    for (var i = 0; i < numScoreDigits; ++i)
+    {
+        var sprite = scoreSprites[i];
+        var num  = scoreStr[i] - '0';
+        sprite.uvOffset.x = num * numberPixelWidth / numberTexWidth;
+    }
 }
+
 
 function explode(at, num)
 {
@@ -160,7 +155,8 @@ Dopey.prototype = new Enemy();
 Dopey.prototype.constructor = Enemy;
 
 
-function init() {
+function init()
+{
     window.addEventListener("MozGamepadConnected", mozconnecthandler);
 
     container = document.createElement( 'div' );
@@ -173,16 +169,7 @@ function init() {
     scene.fog = new THREE.Fog( 0x00aaff, 1000, FAR );
     scene.fog.color.setHSV( 0.13, 0.25, 0.1 );
 
-    var textureNumbers = THREE.ImageUtils.loadTexture("numbers.png");
-    var sprite = new THREE.Sprite({
-        map: textureNumbers,
-        useScreenCoordinates: true,
-        affectedByDistance: false,
-        alignment: THREE.SpriteAlignment.bottomLeft
-    });
-    sprite.position.x = 0;
-    sprite.position.y = SCREEN_HEIGHT;
-    scene.add(sprite);
+    setUpScore();
 
     // TEXTURES
 
@@ -208,11 +195,11 @@ function init() {
 
     var tinyGeom = new THREE.CubeGeometry( 8, 8, 8 );
 
-    var wallGeom = new THREE.CubeGeometry( 15, 70, 5 );
+    var wallGeom = new THREE.CubeGeometry( 20, 70, 5 );
     var wallMat = new THREE.MeshPhongMaterial( { shininess: 80, ambient: 0x88aa88, color: 0xffffff, specular: 0xffffff, map: textureSquares } );
     walls = [];
     var count = 0;
-    for (var i = 0; i < 2*Math.PI; i += Math.PI / 128)
+    for (var i = 0; i < 2*Math.PI; i += Math.PI / 16)
     {
         var wall = new THREE.Mesh(wallGeom, wallMat);
         walls[count++] = wall;
@@ -220,7 +207,7 @@ function init() {
         wall.scale.set(5, 3, 5);
         wall.rotation.y = i;
         wall.receiveShadow = true;
-        wall.castShadow = false;
+        wall.castShadow = true;
         scene.add(wall);
     }
 
@@ -400,7 +387,8 @@ function init() {
     shipVel = new THREE.Vector3(0, 0, 0);
     leftStick = new THREE.Vector3(0, 0, 0);
     rightStick = new THREE.Vector3(0, 0, 0);
-    console.log("done init");
+
+    animate();
 }
 
 //
@@ -425,26 +413,31 @@ function onWindowResize( event ) {
 
     effectFXAA.uniforms[ 'resolution' ].value.set( 1 / SCREEN_WIDTH, 1 / SCREEN_HEIGHT );
 
+    updateScoreScreenLocation();
 }
 
 //
 
-function animate() {
-
+function animate()
+{
     requestAnimationFrame( animate );
-
     render();
-
 }
 
-function ease(from, to, fraction) {
+function ease(from, to, fraction)
+{
     if (fraction === undefined) fraction = 0.1;
     return (to - from) * fraction + from;
 }
-function dead(x, y) {
-    if (Math.sqrt(x*x + y*y) < 0.25) return 0;
+
+function dead(x, y)
+{
+    if (Math.sqrt(x*x + y*y) < 0.25)
+        return 0;
 }
-function shoot(x, z, focus) {
+
+function shoot(x, z, focus)
+{
     var b = bullets[bulletIndex++];
     if (bulletIndex == bullets.length) bulletIndex = 0;
     b.position.copy(ship.position);
@@ -456,12 +449,15 @@ function shoot(x, z, focus) {
     b.vel_.z = z * 25 + (1.0 - focus) * Math.random() * 20;
     scene.add(b);
 }
-function cube(x) {
+
+function cube(x)
+{
     return x*x*x;
 }
 
 function collideSphereWithEnemies(b, rad)
 {
+    if (enemy.position.y > 100 || enemy.position.y < -100) return false;
     var dx = b.position.x - enemy.position.x;
     var dz = b.position.z - enemy.position.z;
     var dist = dx*dx + dz*dz;
@@ -647,3 +643,4 @@ function render() {
 
 }
 
+init();
