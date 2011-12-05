@@ -17,13 +17,9 @@ var composer, effectFXAA, hblur, vblur;
 
 var parameters;
 
-var clock = new THREE.Clock();
-
 var BULLET_RADIUS = 9;
 
 var explodeIndex = 0;
-var scale = 800;
-var scale2 = scale/2;
 
 var bulletIndex = 0;
 var fireCountDown = 0;
@@ -38,9 +34,9 @@ textMaterialSide = new THREE.MeshPhongMaterial( { color: 0xffffff, shading: THRE
 var mode = 'TITLE';
 
 var numScoreDigits = 6;
-var numberPixelWidth = 48;
-var numberTexWidth = 512;
-var scoreSprites = [];
+var textGeos = [];
+var textMat = [];
+var textMeshes = [];
 
 function mozconnecthandler(e)
 {
@@ -49,53 +45,61 @@ function mozconnecthandler(e)
 
 function setUpScore()
 {
-    var textureNumbers = THREE.ImageUtils.loadTexture("numbers.png");
-    for (var i = 0; i < numScoreDigits; ++i)
+    for (var i = 0; i <= 9; ++i)
     {
-        var sprite = new THREE.Sprite({
-            map: textureNumbers,
-            useScreenCoordinates: true,
-            affectedByDistance: false,
-            scaleByViewport: true,
-            alignment: THREE.SpriteAlignment.bottomRight
+        var text = "" + i;
+        var textGeo = new THREE.TextGeometry(text,
+        {
+            size: 70,
+            height: 20,
+            curveSegments: 4,
+
+            font: "helvetiker",
+            weight: "bold",
+            style: "normal",
+
+            bevelThickness: 2,
+            bevelSize: 1.5,
+            bevelEnabled: true,
+            bend: false,
+            material: 0,
+            extrudeMaterial: 1
         });
-        sprite.uvOffset.x = 0;
-        sprite.uvScale.x = numberPixelWidth/numberTexWidth;
-        scene.add(sprite);
-        scoreSprites.push(sprite);
+        textGeos.push(textGeo);
     }
-    updateScoreScreenLocation();
+
+    textMat = new THREE.MeshPhongMaterial( { color: 0xffffff, shading: THREE.SmoothShading } );
+
+    updateScores();
 }
 
-function updateScoreScreenLocation()
+function zeroPadScore(n)
 {
-    for (var i = 0; i < numScoreDigits; ++i)
-    {
-        var sprite = scoreSprites[i];
-        var screenScale = .12;
-        sprite.scale.x = screenScale * SCREEN_HEIGHT/SCREEN_WIDTH;;
-        sprite.scale.y = screenScale;
-        sprite.position.x = SCREEN_WIDTH - (numScoreDigits - i - 1) * numberPixelWidth - 10;
-        sprite.position.y = SCREEN_HEIGHT - 10;
-    }
+    var ret = "" + n;
+    while (ret.length < numScoreDigits) ret = "0" + ret;
+    return ret;
 }
 
 function updateScores()
 {
-    var scoreStr = "" + curScore;
-    while (scoreStr.length < numScoreDigits) scoreStr = "0" + scoreStr;
+    if (curScore > highScore)
+    {
+        highScore = curScore;
+    }
+    var scoreStr = zeroPadScore(curScore);
     for (var i = 0; i < numScoreDigits; ++i)
     {
-        var sprite = scoreSprites[i];
         var num  = scoreStr[i] - '0';
-        sprite.uvOffset.x = num * numberPixelWidth / numberTexWidth;
+        scene.remove(textMeshes[i]);
+        textMeshes[i] = addObjectColor(textGeos[num], 0xffffff, (i - numScoreDigits/2) * 100, 80, -1200);
     }
 }
 
 
+var explodeScale = 1200;
 function explode(at, num)
 {
-    num = num || 2;
+    num = num || 3;
     for (var i = 0; i < num; ++i)
     {
         var obj = explodeBricks[explodeIndex];
@@ -103,9 +107,9 @@ function explode(at, num)
         if (++explodeIndex >= explodeBricks.length)
             explodeIndex = 0;
         obj.position.copy(at);
-        vel.x = Math.random() * scale - scale2;
-        vel.y = Math.random() * scale*1.5 - scale2*1.5;
-        vel.z = Math.random() * scale - scale2;
+        vel.x = Math.random() * explodeScale - explodeScale/2;
+        vel.y = Math.random() * explodeScale*2 - explodeScale/2;
+        vel.z = Math.random() * explodeScale - explodeScale/2;
     }
 }
 
@@ -210,37 +214,6 @@ function init()
         scene.add(expl);
         explodeVels.push(new THREE.Vector3(0, 0, 0));
     }
-
-    // OBJECTS
-
-    //var sphereGeometry = new THREE.SphereGeometry( 100, 64, 32 );
-    //var torusGeometry = new THREE.TorusGeometry( 240, 60, 32, 64 );
-    //var cubeGeometry = new THREE.CubeGeometry( 150, 150, 150 );
-
-    var smallCube = new THREE.CubeGeometry( 100, 100, 100 );
-
-
-    /*
-    var bigCube = new THREE.CubeGeometry( 50, 500, 50 );
-    var midCube = new THREE.CubeGeometry( 50, 200, 50 );
-
-    weewaa = addObjectColor( bigCube,   0xff0000, -500, 250, 0, 0 );
-    addObjectColor( smallCube, 0xff0000, -500, 50, -150, 0 );
-
-    addObjectColor( midCube,   0x00ff00, 500, 100, 0, 0 );
-    addObjectColor( smallCube, 0x00ff00, 500, 50, -150, 0 );
-
-    addObjectColor( midCube,   0x0000ff, 0, 100, -500, 0 );
-    addObjectColor( smallCube, 0x0000ff, -150, 50, -500, 0 );
-
-    addObjectColor( midCube,   0xff00ff, 0, 100, 500, 0 );
-    addObjectColor( smallCube, 0xff00ff, -150, 50, 500, 0 );
-
-    addObjectColor( new THREE.CubeGeometry( 500, 10, 10 ), 0xffff00, 0, 600, 0, Math.PI/4 );
-    addObjectColor( new THREE.CubeGeometry( 250, 10, 10 ), 0xffff00, 0, 600, 0, 0 );
-
-    addObjectColor( new THREE.SphereGeometry( 100, 32, 26 ), 0xffffff, -300, 100, 300, 0 );
-    */
 
     Enemy.init();
 
@@ -397,8 +370,6 @@ function onWindowResize( event ) {
     vblur.uniforms[ 'v' ].value = 4 / SCREEN_HEIGHT;
 
     effectFXAA.uniforms[ 'resolution' ].value.set( 1 / SCREEN_WIDTH, 1 / SCREEN_HEIGHT );
-
-    updateScoreScreenLocation();
 }
 
 //
@@ -507,7 +478,7 @@ function explodeEnemy(e, ei)
     Sfx.play(Sfx.EXPLODE);
     enemies.splice(ei, 1);
     scene.remove(e.mesh);
-    explode(e.mesh.position, 30);
+    explode(e.mesh.position, 50);
 }
 
 var bulletImpactTmp = new THREE.Vector3();
@@ -515,6 +486,7 @@ function bulletEnemyCollide(b, e, ei)
 {
     explode(b.position);
     b.position.y = -100;
+    scene.remove(b);
     e.hitpoints--;
     if (e.hitpoints > 0)
     {
@@ -526,7 +498,8 @@ function bulletEnemyCollide(b, e, ei)
     }
     else
     {
-        curScore += e.scorePoints;
+        var timeToDead = Math.floor((clock.getElapsedTime() - e.spawnTime) * 10)
+        curScore += e.scorePoints - timeToDead;
         explodeEnemy(e, ei);
     }
     updateScores();
@@ -552,7 +525,7 @@ function collideShipWithEnemy(e)
     var minDist = shipRadius + e.radius;
     if (dist <= minDist*minDist)
     {
-        explode(ship.position, 100);
+        explode(ship.position, 200);
         Sfx.play(Sfx.EXPLODE_DIE);
         var enemiesLength = enemies.length;
         for (var i = enemiesLength - 1; i >= 0; --i)
@@ -560,6 +533,8 @@ function collideShipWithEnemy(e)
             explodeEnemy(enemies[i], i);
         }
         mode = 'TITLE';
+        document.getElementById('highscore').innerHTML = zeroPadScore(highScore);
+        document.getElementById('lastscore').innerHTML = zeroPadScore(curScore);
         document.getElementById('title').style.display = '';
         return true;
     }

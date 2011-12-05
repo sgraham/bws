@@ -47,6 +47,7 @@
 		<script src="three.js/examples/js/Detector.js"></script>
 		<script src="three.js/examples/js/RequestAnimationFrame.js"></script>
 		<script src="three.js/examples/js/Stats.js"></script>
+        <script src="helvetiker_bold.typeface.js"></script>
         <script src="Tween.js"></script>
         <script src="sfx.js"></script>
         <script src="enemies.js"></script>
@@ -63,12 +64,20 @@
                 Press a button on your gamepad to begin. 
             </h3>
 
-            <p>
+            <h5>High score: <span id="highscore">000000</h5>
+            <h5>Last score: <span id="lastscore">000000</h5>
+
+            <p style="font-size: 24px; color: #aaa">
                 Gamepad API required. Currently available in <a
                 href="http://tools.google.com/dlpage/chromesxs">Chrome
                 Canary</a> (Windows only) and a <a
                 href="http://people.mozilla.com/~tmielczarek/gamepad/">Firefox
                 Nightly</a>. Hit F11 for the full experience.
+            </p>
+            <p style="font-size: 14px; color: #aaa">
+                <a href="http://h4ck3r.net/">Scott Graham</a>
+                &bull; <a href="http://twitter.com/h4kr">@h4kr</a>
+                &bull; <a href="http://dvcs.w3.org/hg/webevents/raw-file/default/gamepad.html">Gamepad draft API spec</a>
             </p>
         </div>
         </div>

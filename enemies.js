@@ -1,3 +1,4 @@
+var clock = new THREE.Clock();
 var enemies = [];
 var enemyStartHeight = 2000;
 
@@ -9,6 +10,7 @@ function Enemy(loc)
     this.accel = new THREE.Vector3();
     if (this.constructor != Enemy)
         enemies.push(this);
+    this.spawnTime = clock.getElapsedTime();
 }
 
 Enemy.init = function()
@@ -138,7 +140,7 @@ BlackHole.prototype.update = function(delta)
     // suck towards
     BlackHole.tmp1.sub(this.mesh.position, ship.position);
     BlackHole.tmp1.setLength(300);
-    shipSuck.copy(BlackHole.tmp1);
+    shipSuck.addSelf(BlackHole.tmp1);
 
     // move towards
     BlackHole.tmp1.sub(ship.position, this.mesh.position);
