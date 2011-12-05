@@ -42,9 +42,6 @@ var numberPixelWidth = 48;
 var numberTexWidth = 512;
 var scoreSprites = [];
 
-var enemies = [];
-var enemyStartHeight = 2000;
-
 function mozconnecthandler(e)
 {
     navigator.webkitGamepads = [e.gamepad];
@@ -138,91 +135,6 @@ function addObjectColor( geometry, color, x, y, z, ry )
     //THREE.ColorUtils.adjustHSV( material.ambient, 0, 0, -0.5 );
 
     return addObject( geometry, material, x, y, z, ry );
-}
-
-function Enemy(loc)
-{
-}
-
-Enemy.prototype = {
-
-constructor: Enemy,
-
-spawn: function(target) {
-    var tween = new TWEEN.Tween(this.mesh.position).to(target, 2000).easing(TWEEN.Easing.Bounce.EaseOut);
-    tween.start();
-},
-
-};
-
-function Dopey(startLoc)
-{
-    Enemy.call(this);
-    this.mesh = addObject(Dopey.geom, Dopey.mat, startLoc.x, enemyStartHeight, startLoc.z);
-    this.mesh.receiveShadow = false;
-    this.spawn(startLoc);
-    this.radius = 60;
-    this.hitpoints = 8;
-    this.scorePoints = 100;
-    enemies.push(this);
-}
-
-Dopey.prototype = new Enemy();
-Dopey.prototype.constructor = Dopey;
-
-Dopey.tmp1 = new THREE.Vector3();
-Dopey.prototype.update = function(delta)
-{
-    this.mesh.rotation.y += 15 * delta;
-
-    Dopey.tmp1.sub(ship.position, this.mesh.position);
-    Dopey.tmp1.y = 0;
-    Dopey.tmp1.normalize();
-    Dopey.tmp1.multiplyScalar(delta * 200);
-    this.mesh.position.addSelf(Dopey.tmp1);
-};
-
-Dopey.init = function()
-{
-    Dopey.geom = new THREE.CubeGeometry(30, 30, 120);
-    Dopey.mat = new THREE.MeshPhongMaterial( { shininess: 10, ambient: 0x00ff00, color: 0x00ff00 } );
-};
-
-
-function Spinner(startLoc)
-{
-    Enemy.call(this);
-    var mtop = addObject(Spinner.geomTop, Spinner.mat, 45, 0, 0);
-    mtop.receiveShadow = false;
-    var mright = addObject(Spinner.geomRight, Spinner.mat, 0, 0, 45);
-    mright.receiveShadow = false;
-    this.mesh = addObject(Spinner.geomCentre, Spinner.mat, startLoc.x, enemyStartHeight, startLoc.z);
-
-    this.mesh.add(mtop);
-    this.mesh.add(mright);
-
-    this.spawn(startLoc);
-    this.radius = 60;
-    this.hitpoints = 20;
-    this.scorePoints = 250;
-    enemies.push(this);
-}
-
-Spinner.prototype = new Enemy();
-Spinner.prototype.constructor = Spinner;
-
-Spinner.tmp1 = new THREE.Vector3();
-Spinner.prototype.update = function(delta)
-{
-    this.mesh.rotation.y += 5 * delta;
-};
-
-Spinner.init = function()
-{
-    Spinner.geomTop = new THREE.CubeGeometry(30, 30, 120);
-    Spinner.geomRight = new THREE.CubeGeometry(120, 30, 30);
-    Spinner.geomCentre = new THREE.CubeGeometry(20, 30, 20);
-    Spinner.mat = new THREE.MeshPhongMaterial( { shininess: 200, ambient: 0x0000ff, color: 0x0000ff });
 }
 
 
@@ -330,8 +242,7 @@ function init()
     addObjectColor( new THREE.SphereGeometry( 100, 32, 26 ), 0xffffff, -300, 100, 300, 0 );
     */
 
-    Dopey.init();
-    Spinner.init();
+    Enemy.init();
 
     bullets = [];
     for (var i = 0; i < 300; i++)
@@ -370,12 +281,12 @@ function init()
     ambientLight.color.setHSV( 0.1, 0.9, 0.25 );
     scene.add( ambientLight );
 
-    pointLight = new THREE.PointLight( 0x00aaaa, pointIntensity, 5000 );
+    pointLight = new THREE.PointLight( 0x00aaaa, pointIntensity, 3000 );
     pointLight.position.set( 0, 0, 0 );
     scene.add( pointLight );
 
     sunLight = new THREE.SpotLight( 0xffffff, sunIntensity );
-    sunLight.position.set( 1000, 2000, 1000 );
+    sunLight.position.set( -1000, 2000, -1000 );
     sunLight.castShadow = true;
     scene.add( sunLight );
 
@@ -458,6 +369,7 @@ function init()
 
     easeTo = new THREE.Vector3(0, 0, 0);
     shipVel = new THREE.Vector3(0, 0, 0);
+    shipSuck = new THREE.Vector3(0, 0, 0);
     leftStick = new THREE.Vector3(0, 0, 0);
     rightStick = new THREE.Vector3(0, 0, 0);
 
@@ -517,9 +429,9 @@ function shoot(x, z, focus)
     b.position.x += x * 50;
     b.position.y += 20;
     b.position.z += z * 50;
-    b.vel_.x = x * 25 + (1.0 - focus) * Math.random() * 20;
+    b.vel_.x = x * 1800 + (1.0 - focus) * Math.random() * 20;
     b.vel_.y = 0;
-    b.vel_.z = z * 25 + (1.0 - focus) * Math.random() * 20;
+    b.vel_.z = z * 1800 + (1.0 - focus) * Math.random() * 20;
     scene.add(b);
 }
 
@@ -528,15 +440,15 @@ function cube(x)
     return x*x*x;
 }
 
+var collideTmp = new THREE.Vector3();
 function collideSphereWithEnemies(b, rad, onHit)
 {
     var len = enemies.length;
     for (var i = 0; i < len; ++i)
     {
         var enemy = enemies[i];
-        var dx = b.position.x - enemy.mesh.position.x;
-        var dz = b.position.z - enemy.mesh.position.z;
-        var dist = dx*dx + dz*dz;
+        collideTmp.sub(b.position, enemy.mesh.position);
+        var dist = collideTmp.lengthSq();
         var minDist = rad + enemy.radius;
         if (dist <= minDist*minDist)
         {
@@ -553,7 +465,7 @@ function updateExplosions(delta)
     {
         var b = explodeBricks[i];
         var v = explodeVels[i];
-        v.y -= 500 * delta;
+        v.y -= 800 * delta;
         b.position.x += v.x * delta;
         b.position.y += v.y * delta;
         b.position.z += v.z * delta;
@@ -564,6 +476,7 @@ function updateExplosions(delta)
     }
 }
 
+var enemyUpdateTmp1 = new THREE.Vector3();
 function updateEnemies(delta)
 {
     var len = enemies.length;
@@ -571,9 +484,33 @@ function updateEnemies(delta)
     {
         var e = enemies[i];
         e.update(delta);
+        enemyUpdateTmp1.copy(e.accel);
+        //enemyUpdateTmp1.y = 0;
+        enemyUpdateTmp1.multiplyScalar(delta);
+        e.vel.addSelf(enemyUpdateTmp1);
+        if (e.vel.lengthSq() >= e.maxvel)
+            e.vel.setLength(e.maxvel);
+        enemyUpdateTmp1.copy(e.vel);
+        //enemyUpdateTmp1.y = 0;
+        enemyUpdateTmp1.multiplyScalar(delta);
+        e.impulse.multiplyScalar(delta);
+        enemyUpdateTmp1.addSelf(e.impulse);
+        e.impulse.set(0, 0, 0);
+        e.mesh.position.addSelf(enemyUpdateTmp1);
+        if (collideShipWithEnemy(e))
+            return;
     }
 }
 
+function explodeEnemy(e, ei)
+{
+    Sfx.play(Sfx.EXPLODE);
+    enemies.splice(ei, 1);
+    scene.remove(e.mesh);
+    explode(e.mesh.position, 30);
+}
+
+var bulletImpactTmp = new THREE.Vector3();
 function bulletEnemyCollide(b, e, ei)
 {
     explode(b.position);
@@ -582,18 +519,60 @@ function bulletEnemyCollide(b, e, ei)
     if (e.hitpoints > 0)
     {
         curScore += 1;
+        bulletImpactTmp.copy(b.vel_);
+        bulletImpactTmp.setLength(1300);
+        e.impulse.copy(bulletImpactTmp);
         Sfx.play(Sfx.HIT4);
     }
     else
     {
         curScore += e.scorePoints;
-        Sfx.play(Sfx.EXPLODE);
-        enemies.splice(ei, 1);
-        scene.remove(e.mesh);
-        explode(e.mesh.position, 30);
-        hacky = 0;
+        explodeEnemy(e, ei);
     }
     updateScores();
+}
+
+function updateBullets(delta)
+{
+    for (var i = 0; i < bullets.length; ++i)
+    {
+        var b = bullets[i];
+        b.position.x += b.vel_.x * delta;
+        b.position.z += b.vel_.z * delta;
+        collideSphereWithEnemies(b, BULLET_RADIUS, bulletEnemyCollide);
+    }
+}
+
+var collideShipTmp = new THREE.Vector3();
+var shipRadius = 25;
+function collideShipWithEnemy(e)
+{
+    collideShipTmp.sub(e.mesh.position, ship.position);
+    var dist = collideShipTmp.lengthSq();
+    var minDist = shipRadius + e.radius;
+    if (dist <= minDist*minDist)
+    {
+        explode(ship.position, 100);
+        Sfx.play(Sfx.EXPLODE_DIE);
+        var enemiesLength = enemies.length;
+        for (var i = enemiesLength - 1; i >= 0; --i)
+        {
+            explodeEnemy(enemies[i], i);
+        }
+        mode = 'TITLE';
+        document.getElementById('title').style.display = '';
+        return true;
+    }
+    return false;
+}
+
+var waveIndex = -1;
+function spawnNewEnemies()
+{
+    if (enemies.length > 0) return;
+    waveIndex++;
+    if (waveIndex == Waves.length) waveIndex = 0;
+    Waves[waveIndex]();
 }
 
 function render() {
@@ -625,7 +604,7 @@ function render() {
             rightStick.normalize();
             shoot(rightStick.x, rightStick.z, rightStickLen);
             Sfx.play(Sfx.SHOOT);
-            fireCountDown += .06;
+            fireCountDown += .08;
         }
         if (rotTurret)
             shipPivot.rotation.y = Math.atan2(rightStick.x, rightStick.z) + Math.PI;
@@ -661,17 +640,19 @@ function render() {
                 var pad = navigator.webkitGamepads[i];
                 if (pad)
                 {
-                    for (j = 0; j < pad.buttons.length; ++j)
+                    for (j = 0; j < pad.buttons.length && j < 4; ++j)
                     {
                         if (pad.buttons[j] > 0.5)
                         {
                             playerPad = i;
+                            waveIndex = -1;
+                            curScore = 0;
+                            updateScores();
                             mode = 'GAME';
                             Sfx.play(Sfx.SELECT);
                             document.getElementById('title').style.display = 'none';
                         }
                     }
-                    break;
                 }
             }
         }
@@ -688,16 +669,11 @@ function render() {
         }
         shipVel.x = ease(shipVel.x, leftStick.x * 600, 0.2);
         shipVel.z = ease(shipVel.z, leftStick.z * 600, 0.2);
-        ship.position.x += shipVel.x * delta;
-        ship.position.z += shipVel.z * delta;
+        ship.position.x += (shipVel.x + shipSuck.x) * delta;
+        ship.position.z += (shipVel.z + shipSuck.z) * delta;
+        shipSuck.set(0, 0, 0);
 
-        if (pad.buttons[0] > .5 && !window.hacky)
-        {
-            //new Dopey({ x : -400, y: 115, z: -1000 });
-            //new Dopey({ x : 400, y: 115, z: -1000 });
-            new Spinner({x: 0, y: 115, z: -400 });
-            hacky = 1;
-        }
+        spawnNewEnemies();
 
         rightStick.set(pad.axes[2], 0, pad.axes[3]);
         aimAndShoot();
@@ -713,25 +689,15 @@ function render() {
     }
 
     updateEnemies(delta);
+    updateBullets(delta);
     updateExplosions(delta);
 
     //console.log(clock.getElapsedTime());
     //weewaa.rotation.y = clock.getElapsedTime();
     //weewaa.position.x = Math.sin(clock.getElapsedTime() / 100.0) * 50;
 
-    camera.position.set( 100, 800, ship.position.z / 4 + 1500 );
-    camera.lookAt(new THREE.Vector3(ship.position.x / 10.0,0,ship.position.z / 10.0));
-
-    for (var i = 0; i < bullets.length; ++i)
-    {
-        var b = bullets[i];
-        b.position.x += b.vel_.x;
-        b.position.z += b.vel_.z;
-
-        if (b.position.x < -1000 || b.position.z < -1000 || b.position.x > 1000 || b.position.x > 1000 || b.position.y < 0)
-            continue;
-        collideSphereWithEnemies(b, BULLET_RADIUS, bulletEnemyCollide);
-    }
+    camera.position.set( 100, 1000, ship.position.z / 3 + 1500 );
+    camera.lookAt(new THREE.Vector3(ship.position.x / 6.0,0,ship.position.z / 6.0));
 
     // render shadow map
 
