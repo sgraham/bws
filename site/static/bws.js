@@ -92,6 +92,9 @@ function updateScores()
         var num  = scoreStr[i] - '0';
         scene.remove(textMeshes[i]);
         textMeshes[i] = addObjectColor(textGeos[num], 0xffffff, (i - numScoreDigits/2) * 100, 80, -1200);
+        textMeshes[i].receiveShadow = false;
+        // hmm, some update lameness going on here, gunk at origin for 1 frame w/ shadows on
+        textMeshes[i].castShadow = false;
     }
 }
 
