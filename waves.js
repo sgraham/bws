@@ -71,7 +71,6 @@ Waves = [
 
     function() {
         new BlackHole({ x: -500, y: 120, z: -1000 });
-        new BlackHole({ x: 0, y: 120, z: 1000 });
         new Spinner({ x: -1000, y: 115, z: 0 });
         new Spinner({ x: 1000, y: 115, z: 0 });
     },
