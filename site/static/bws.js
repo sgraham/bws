@@ -501,8 +501,8 @@ function bulletEnemyCollide(b, e, ei)
     }
     else
     {
-        var timeToDead = Math.floor((clock.getElapsedTime() - e.spawnTime) * 10)
-        curScore += e.scorePoints - timeToDead;
+        var timeToDead = Math.floor((clock.getElapsedTime() - e.spawnTime) * 10);
+        curScore += Math.max(0, e.scorePoints - timeToDead);
         explodeEnemy(e, ei);
     }
     updateScores();
