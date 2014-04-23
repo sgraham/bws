@@ -5,9 +5,7 @@ You are a Box. Wot Shoots. And you need to... yes, that's right shoot! To score
 points and then achieve The Not Dying.
 
 
-Needs Gamepad API, which as of this writing you can get in:
-- Chrome Canary Windows
-- a custom Firefox build (http://people.mozilla.com/~tmielczarek/gamepad/)
+Needs Gamepad API, which as of this writing you can get in Chrome or Firefox.
 
 And, audio is Web Audio only (sorry, I couldn't get the others to work
 reliably).
