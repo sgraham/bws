@@ -38,9 +38,8 @@ var textGeos = [];
 var textMat = [];
 var textMeshes = [];
 
-function mozconnecthandler(e)
-{
-    navigator.webkitGamepads = [e.gamepad];
+if (!('getGamepads' in navigator) && 'webkitGetGamepads' in navigator) {
+  navigator.getGamepads = function() { return navigator.webkitGetGamepads(); };
 }
 
 function setUpScore()
@@ -147,8 +146,6 @@ function addObjectColor( geometry, color, x, y, z, ry )
 
 function init()
 {
-    window.addEventListener("MozGamepadConnected", mozconnecthandler);
-
     container = document.createElement( 'div' );
     document.body.appendChild( container );
 
@@ -609,18 +606,20 @@ function render() {
             explode(new THREE.Vector3(Math.random() * 1000 - 500, 500, Math.random() * 1000 - 500));
         }
 
-        var pads = navigator.webkitGamepads;
+        var pads = navigator.getGamepads();
         if (pads)
         {
             var possiblePadsLen = pads.length;
             for (var i = 0; i < possiblePadsLen; ++i)
             {
-                var pad = navigator.webkitGamepads[i];
+                var pad = pads[i];
                 if (pad)
                 {
                     for (j = 0; j < pad.buttons.length && j < 4; ++j)
                     {
-                        if (pad.buttons[j] > 0.5)
+                        if ((typeof(pad.buttons[j]) == "number" &&
+                             pad.buttons[j] > 0.5) ||
+                            pad.buttons[j].pressed)
                         {
                             playerPad = i;
                             waveIndex = -1;
@@ -637,7 +636,7 @@ function render() {
     }
     else
     {
-        var pad = navigator.webkitGamepads[playerPad];
+        var pad = navigator.getGamepads()[playerPad];
         leftStick.set(pad.axes[0], 0, pad.axes[1]);
         if (leftStick.length() < 0.25)
             leftStick.set(0, 0, 0);
