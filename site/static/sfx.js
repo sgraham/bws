@@ -28,19 +28,19 @@ BufferLoader.prototype.loadBuffer = function(url, index) {
           loader.onload(loader.bufferList);
       }
     );
-  }
+  };
 
   request.onerror = function() {
     alert('BufferLoader: XHR error');
-  }
+  };
 
   request.send();
-}
+};
 
 BufferLoader.prototype.load = function() {
   for (var i = 0; i < this.urlList.length; ++i)
   this.loadBuffer(this.urlList[i], i);
-}
+};
 
 
 var Sfx = {};
@@ -49,11 +49,13 @@ Sfx.ready = false;
 
 Sfx.audioInit = function()
 {
-    try {
+    if (window.AudioContext) {
+        Sfx.ac = new AudioContext();
+    } else if (webkitAudioContext) {
         Sfx.ac = new webkitAudioContext();
-    }
-    catch(e) {
+    } else {
         console.log("Sorry, no Web Audio API in this browser.");
+        return;
     }
 
     urls = [
@@ -89,7 +91,11 @@ Sfx.play = function(buffer) {
     var source = Sfx.ac.createBufferSource();
     source.buffer = buffer;
     source.connect(Sfx.ac.destination);
-    source.noteOn(0);
+    if (source.start) {
+      source.start(0);
+    } else if (source.noteOn) {
+      source.noteOn(0);
+    }
 };
 
 window.addEventListener('load', Sfx.audioInit, false);

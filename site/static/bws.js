@@ -38,9 +38,8 @@ var textGeos = [];
 var textMat = [];
 var textMeshes = [];
 
-function mozconnecthandler(e)
-{
-    navigator.webkitGamepads = [e.gamepad];
+if (!('getGamepads' in navigator) && 'webkitGetGamepads' in navigator) {
+  navigator.getGamepads = function() { return navigator.webkitGetGamepads(); };
 }
 
 function setUpScore()
@@ -121,7 +120,7 @@ function addObject( geometry, material, x, y, z, ry )
     ry = ry || 0;
     var tmpMesh = new THREE.Mesh( geometry, material );
 
-    THREE.ColorUtils.adjustHSV( tmpMesh.material.color, 0.1, -0.1, 0 );
+    tmpMesh.material.color.offsetHSL( 0.1, -0.1, 0 );
 
     tmpMesh.position.set( x, y, z );
 
@@ -147,8 +146,6 @@ function addObjectColor( geometry, color, x, y, z, ry )
 
 function init()
 {
-    window.addEventListener("MozGamepadConnected", mozconnecthandler);
-
     container = document.createElement( 'div' );
     document.body.appendChild( container );
 
@@ -157,7 +154,7 @@ function init()
     scene = new THREE.Scene();
 
     scene.fog = new THREE.Fog( 0x00aaff, 1000, FAR );
-    scene.fog.color.setHSV( 0.13, 0.25, 0.1 );
+    scene.fog.color.setHSL( 0.13, 0.25, 0.1 );
 
     setUpScore();
 
@@ -254,7 +251,7 @@ function init()
         pointColor = 0xffaa00;
 
     ambientLight = new THREE.AmbientLight( 0xffffff );
-    ambientLight.color.setHSV( 0.1, 0.9, 0.25 );
+    ambientLight.color.setHSL( 0.1, 0.9, 0.12 );
     scene.add( ambientLight );
 
     pointLight = new THREE.PointLight( 0x00aaaa, pointIntensity, 3000 );
@@ -561,13 +558,13 @@ function render() {
     var delta = clock.getDelta();
     //console.log(delta);
 
-    scene.fog.color.setHSV( 0.13, 0.25, THREE.Math.mapLinear( parameters.control, 0, 100, 0.1, 0.99 ) );
+    scene.fog.color.setHSL( 0.13, 0.25, THREE.Math.mapLinear( parameters.control, 0, 100, 0.1, 0.4 ) );
     renderer.setClearColor( scene.fog.color, 1 );
 
     sunLight.intensity = THREE.Math.mapLinear( parameters.control, 0, 100, 0.3, 1 );
     pointLight.intensity = THREE.Math.mapLinear( parameters.control, 0, 100, 1, 0.5 );
 
-    pointLight.color.setHSV( 0.1, THREE.Math.mapLinear( parameters.control, 0, 100, 0.99, 0 ), 0.9 );
+    pointLight.color.setHSL( 0.1, THREE.Math.mapLinear( parameters.control, 0, 100, 0.99, 0 ), 0.4 );
 
     renderer.shadowMapDarkness = 0.3;
 
@@ -609,18 +606,20 @@ function render() {
             explode(new THREE.Vector3(Math.random() * 1000 - 500, 500, Math.random() * 1000 - 500));
         }
 
-        var pads = navigator.webkitGamepads;
+        var pads = navigator.getGamepads();
         if (pads)
         {
             var possiblePadsLen = pads.length;
             for (var i = 0; i < possiblePadsLen; ++i)
             {
-                var pad = navigator.webkitGamepads[i];
+                var pad = pads[i];
                 if (pad)
                 {
                     for (j = 0; j < pad.buttons.length && j < 4; ++j)
                     {
-                        if (pad.buttons[j] > 0.5)
+                        if ((typeof(pad.buttons[j]) == "number" &&
+                             pad.buttons[j] > 0.5) ||
+                            pad.buttons[j].pressed)
                         {
                             playerPad = i;
                             waveIndex = -1;
@@ -637,7 +636,7 @@ function render() {
     }
     else
     {
-        var pad = navigator.webkitGamepads[playerPad];
+        var pad = navigator.getGamepads()[playerPad];
         leftStick.set(pad.axes[0], 0, pad.axes[1]);
         if (leftStick.length() < 0.25)
             leftStick.set(0, 0, 0);
