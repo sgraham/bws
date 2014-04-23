@@ -109,7 +109,7 @@ Spinner.init = function()
     Spinner.geomTop = new THREE.CubeGeometry(30, 30, 120);
     Spinner.geomRight = new THREE.CubeGeometry(120, 30, 30);
     Spinner.geomCentre = new THREE.CubeGeometry(20, 30, 20);
-    Spinner.offsetMat.setRotationY(Math.PI/5);
+    Spinner.offsetMat.makeRotationY(Math.PI/5);
 }
 
 // -------------------------------------------------
