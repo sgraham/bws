@@ -251,7 +251,7 @@ function init()
         pointColor = 0xffaa00;
 
     ambientLight = new THREE.AmbientLight( 0xffffff );
-    ambientLight.color.setHSL( 0.1, 0.9, 0.25 );
+    ambientLight.color.setHSL( 0.1, 0.9, 0.12 );
     scene.add( ambientLight );
 
     pointLight = new THREE.PointLight( 0x00aaaa, pointIntensity, 3000 );
@@ -558,13 +558,13 @@ function render() {
     var delta = clock.getDelta();
     //console.log(delta);
 
-    scene.fog.color.setHSL( 0.13, 0.25, THREE.Math.mapLinear( parameters.control, 0, 100, 0.1, 0.99 ) );
+    scene.fog.color.setHSL( 0.13, 0.25, THREE.Math.mapLinear( parameters.control, 0, 100, 0.1, 0.4 ) );
     renderer.setClearColor( scene.fog.color, 1 );
 
     sunLight.intensity = THREE.Math.mapLinear( parameters.control, 0, 100, 0.3, 1 );
     pointLight.intensity = THREE.Math.mapLinear( parameters.control, 0, 100, 1, 0.5 );
 
-    pointLight.color.setHSL( 0.1, THREE.Math.mapLinear( parameters.control, 0, 100, 0.99, 0 ), 0.9 );
+    pointLight.color.setHSL( 0.1, THREE.Math.mapLinear( parameters.control, 0, 100, 0.99, 0 ), 0.4 );
 
     renderer.shadowMapDarkness = 0.3;
 
