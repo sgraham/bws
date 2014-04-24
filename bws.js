@@ -418,7 +418,7 @@ function collideSphereWithEnemies(b, rad, onHit)
     for (var i = 0; i < len; ++i)
     {
         var enemy = enemies[i];
-        collideTmp.sub(b.position, enemy.mesh.position);
+        collideTmp.subVectors(b.position, enemy.mesh.position);
         var dist = collideTmp.lengthSq();
         var minDist = rad + enemy.radius;
         if (dist <= minDist*minDist)
@@ -458,16 +458,16 @@ function updateEnemies(delta)
         enemyUpdateTmp1.copy(e.accel);
         //enemyUpdateTmp1.y = 0;
         enemyUpdateTmp1.multiplyScalar(delta);
-        e.vel.addSelf(enemyUpdateTmp1);
+        e.vel.add(enemyUpdateTmp1);
         if (e.vel.lengthSq() >= e.maxvel)
             e.vel.setLength(e.maxvel);
         enemyUpdateTmp1.copy(e.vel);
         //enemyUpdateTmp1.y = 0;
         enemyUpdateTmp1.multiplyScalar(delta);
         e.impulse.multiplyScalar(delta);
-        enemyUpdateTmp1.addSelf(e.impulse);
+        enemyUpdateTmp1.add(e.impulse);
         e.impulse.set(0, 0, 0);
-        e.mesh.position.addSelf(enemyUpdateTmp1);
+        e.mesh.position.add(enemyUpdateTmp1);
         if (collideShipWithEnemy(e))
             return;
     }
@@ -520,7 +520,7 @@ var collideShipTmp = new THREE.Vector3();
 var shipRadius = 25;
 function collideShipWithEnemy(e)
 {
-    collideShipTmp.sub(e.mesh.position, ship.position);
+    collideShipTmp.subVectors(e.mesh.position, ship.position);
     var dist = collideShipTmp.lengthSq();
     var minDist = shipRadius + e.radius;
     if (dist <= minDist*minDist)

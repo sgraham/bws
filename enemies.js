@@ -18,7 +18,7 @@ Enemy.init = function()
     Dopey.init();
     Spinner.init();
     BlackHole.init();
-}
+};
 
 Enemy.prototype = {
 
@@ -52,7 +52,7 @@ Dopey.prototype.constructor = Dopey;
 Dopey.tmp1 = new THREE.Vector3();
 Dopey.prototype.update = function(delta)
 {
-    Dopey.tmp1.sub(ship.position, this.mesh.position);
+    Dopey.tmp1.subVectors(ship.position, this.mesh.position);
 
     this.oscillate += delta * 5;
     this.mesh.rotation.y = Math.atan2(Dopey.tmp1.x, Dopey.tmp1.z) + Math.PI/2 + Math.sin(this.oscillate) * Math.PI/6;
@@ -96,7 +96,7 @@ Spinner.offsetMat = new THREE.Matrix4();
 Spinner.prototype.update = function(delta)
 {
     this.mesh.rotation.y += 15 * delta;
-    Spinner.tmp1.sub(ship.position, this.mesh.position);
+    Spinner.tmp1.subVectors(ship.position, this.mesh.position);
     var len = Spinner.tmp1.length();
     if (len > 250)
         Spinner.offsetMat.multiplyVector3(Spinner.tmp1);
@@ -110,7 +110,7 @@ Spinner.init = function()
     Spinner.geomRight = new THREE.CubeGeometry(120, 30, 30);
     Spinner.geomCentre = new THREE.CubeGeometry(20, 30, 20);
     Spinner.offsetMat.makeRotationY(Math.PI/5);
-}
+};
 
 // -------------------------------------------------
 
@@ -138,21 +138,21 @@ BlackHole.prototype.update = function(delta)
     this.mesh.rotation.z += 10 * delta;
 
     // suck towards
-    BlackHole.tmp1.sub(this.mesh.position, ship.position);
+    BlackHole.tmp1.subVectors(this.mesh.position, ship.position);
     BlackHole.tmp1.setLength(300);
     shipSuck.addSelf(BlackHole.tmp1);
 
     // move towards
-    BlackHole.tmp1.sub(ship.position, this.mesh.position);
+    BlackHole.tmp1.subVectors(ship.position, this.mesh.position);
     BlackHole.tmp1.setLength(500);
     this.accel.copy(BlackHole.tmp1);
 
     //this.period += delta * 5;
     //this.mesh.position.y = Math.sin(this.period) * 100 + 115;
-}
-0
+};
+
 BlackHole.init = function()
 {
     //BlackHole.geom = new THREE.CubeGeometry(60, 60, 60);
     BlackHole.geom = new THREE.TorusGeometry(30, 22, 10, 10);
-}
+};
