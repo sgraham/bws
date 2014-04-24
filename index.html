@@ -22,7 +22,7 @@
                 width: 100%;
                 overflow: hidden;
             }
-            #overlay {
+            #overlay, #config {
                 position: relative;
                 width: 800px;
                 margin: auto;
@@ -63,6 +63,7 @@
         <script src="helvetiker_bold.typeface.js"></script>
         <script src="Tween.js"></script>
         <script src="sfx.js"></script>
+        <script src="localforage.js"></script>
         <script src="enemies.js"></script>
         <script src="waves.js"></script>
         <script src="bws.js"></script>
@@ -92,6 +93,26 @@
                 &bull; <a href="http://mrdoob.github.com/three.js/">three.js</a>
             </p>
         </div>
+        <div id="config" style="display:none">
+            <h1>
+                Configure your Controller
+            </h1>
+
+            <h3>
+              I don't recognize your controller, help me out a little.
+            </h3>
+
+            <h3 id="CONFIG_RIGHT_X" style="display:none">
+              Push and hold left on the right analog stick.
+            </h3>
+            <h3 id="CONFIG_RIGHT_Y" style="display:none">
+              Now push and hold up on the right analog stick.
+            </h3>
+            <h3 id="CONFIG_TEST" style="display:none">
+              Great! Now try moving and shooting. Use the left stick to move,
+              and the right stick to shoot.
+              If it all looks good, press any button to start.
+            </h3>
         </div>
 	</body>
 </html>
