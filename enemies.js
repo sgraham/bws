@@ -99,7 +99,7 @@ Spinner.prototype.update = function(delta)
     Spinner.tmp1.subVectors(ship.position, this.mesh.position);
     var len = Spinner.tmp1.length();
     if (len > 250)
-        Spinner.offsetMat.multiplyVector3(Spinner.tmp1);
+        Spinner.tmp1.applyProjection(Spinner.offsetMat);
     Spinner.tmp1.multiplyScalar(9000/len);
     this.accel.copy(Spinner.tmp1);
 };
@@ -140,7 +140,7 @@ BlackHole.prototype.update = function(delta)
     // suck towards
     BlackHole.tmp1.subVectors(this.mesh.position, ship.position);
     BlackHole.tmp1.setLength(300);
-    shipSuck.addSelf(BlackHole.tmp1);
+    shipSuck.add(BlackHole.tmp1);
 
     // move towards
     BlackHole.tmp1.subVectors(ship.position, this.mesh.position);
