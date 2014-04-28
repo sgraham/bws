@@ -42,67 +42,11 @@ var textMeshes = [];
 var playerPad = -1;
 var leftStick, rightStick;
 var mapping = null;
-// It'd be nice to retrieve these from a server so we could
-// post updates from users, but that's more work.
-var knownMappings = {
-    '46d-c21d-Win32-gecko': [0, 1, 3, 4],
-    '124b-4d01-Win32-gecko': [0, 1, 5, 3],
-    '124b-4d01-Win32-chrome': [0, 1, 5, 3],
-    '54c-5c4-Win32-gecko': [0, 1, 2, 5],
-    '45e-2a1-Win32-gecko': [0, 1, 3, 4],
-    '1d79-9-Win32-gecko': [0, 1, 2, 5],
-    '1d79-0009-Win32-chrome': [0, 1, 2, 5],
-    '046d-c21d-Linux': [0, 1, 3, 4],
-    '124b-4d01-Linux': [0, 1, 3, 2],
-    '054c-0268-Linux': [0, 1, 2, 3],
-    '045e-0719-Linux': [0, 1, 3, 4],
-    '054c-05c4-Linux': [0, 1, 2, 3],
-    '1d79-0009-Linux': [0, 1, 2, 3],
-    '54c-5c4-MacIntel-gecko': [0, 1, 2, 3],
-    '124b-4d01-MacIntel-gecko': [0, 1, 4, 2],
-    '124b-4d01-MacIntel-chrome': [0, 1, 5, 2],
-};
+var savedMappings = {};
 var lastAxes = [];
 
 if (!('getGamepads' in navigator) && 'webkitGetGamepads' in navigator) {
   navigator.getGamepads = function() { return navigator.webkitGetGamepads(); };
-}
-
-function controllerID(pad)
-{
-    var bits = pad.id.split('-');
-    if (bits.length < 2)
-    {
-        var match = pad.id.match(/Vendor: (\w+) Product: (\w+)/);
-        if (!match)
-            return null;
-
-        bits = match.slice(1);
-    }
-
-    var platform = navigator.platform.split(' ')[0];
-
-    var id = bits.slice(0, 2).join('-') + '-' + platform;
-
-    // Mappings are the same cross-browser on Linux.
-    if (platform == 'Linux')
-        return id;
-
-    var browser;
-    if (navigator.userAgent.match('Gecko/'))
-    {
-        browser = 'gecko';
-    }
-    else if (navigator.userAgent.match('Chrome/'))
-    {
-        browser = 'chrome';
-    }
-    else
-    {
-        return null;
-    }
-
-    return id + '-' + browser;
 }
 
 function findControllerMapping(pad)
@@ -113,14 +57,10 @@ function findControllerMapping(pad)
         return true;
     }
 
-    var key = controllerID(pad);
-    if (key == null)
-        return false;
-
-    // See if we have a known mapping for this controller.
-    if (key in knownMappings)
+    // See if we have a saved mapping for this controller.
+    if (pad.id in savedMappings)
     {
-        mapping = knownMappings[key];
+        mapping = savedMappings[pad.id];
         return true;
     }
 
@@ -477,8 +417,9 @@ function init()
 
     // See if we have any saved controller mappings.
     localforage.getItem('mappings', function (m) {
-        for (var k in m)
-            knownMappings[k] = m[k];
+        if (m) {
+            savedMappings = m;
+        }
     });
 }
 
@@ -851,13 +792,12 @@ function render() {
             if (foundPad == playerPad)
             {
                 // Save mapping in localStorage
-                var id = controllerID(pad);
                 localforage.getItem('mappings', function (m) {
                     m = m || {};
-                    m[id] = mapping;
+                    m[pad.id] = mapping;
                     localforage.setItem('mappings', m);
                 });
-                knownMappings[id] = mapping;
+                savedMappings[pad.id] = mapping;
                 startGame();
             }
         }
