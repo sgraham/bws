@@ -32,14 +32,81 @@ textMaterialFront = new THREE.MeshPhongMaterial( { color: 0xffffff, shading: THR
 textMaterialSide = new THREE.MeshPhongMaterial( { color: 0xffffff, shading: THREE.SmoothShading } );
 
 var mode = 'TITLE';
+var configStep = '';
 
 var numScoreDigits = 6;
 var textGeos = [];
 var textMat = [];
 var textMeshes = [];
 
+var playerPad = -1;
+var leftStick, rightStick;
+var mapping = null;
+var savedMappings = {};
+var lastAxes = [];
+
 if (!('getGamepads' in navigator) && 'webkitGetGamepads' in navigator) {
   navigator.getGamepads = function() { return navigator.webkitGetGamepads(); };
+}
+
+function findControllerMapping(pad)
+{
+    if (pad.mapping == 'standard' || pad.id.match('STANDARD GAMEPAD'))
+    {
+        mapping = [0, 1, 2, 3];
+        return true;
+    }
+
+    // See if we have a saved mapping for this controller.
+    if (pad.id in savedMappings)
+    {
+        mapping = savedMappings[pad.id];
+        return true;
+    }
+
+    return false;
+}
+
+function findMinAxis(axes)
+{
+    var m = -0.25;
+    var axis = -1;
+    for (var i = 0; i < axes.length; i++)
+    {
+        if (axes[i] < m && axes[i] >= -1.0)
+        {
+            m = axes[i];
+            axis = i;
+        }
+    }
+    return axis;
+}
+
+function axisSettled(axis)
+{
+    lastAxes.push(axis);
+    if (lastAxes.length < 10)
+        return false;
+
+    lastAxes = lastAxes.slice(lastAxes.length - 10);
+    return lastAxes.every(function (a) { return a == axis; });
+}
+
+function showConfigStep()
+{
+    var steps = document.querySelectorAll('#config > h3[id]');
+    for (var i = 0; i < steps.length; i++)
+    {
+        if (steps[i].id == 'CONFIG_' + configStep)
+        {
+            steps[i].style.display = '';
+        }
+        else
+        {
+            steps[i].style.display = 'none';
+        }
+    }
+    Sfx.play(Sfx.SELECT);
 }
 
 function setUpScore()
@@ -347,6 +414,13 @@ function init()
     rightStick = new THREE.Vector3(0, 0, 0);
 
     animate();
+
+    // See if we have any saved controller mappings.
+    localforage.getItem('mappings', function (m) {
+        if (m) {
+            savedMappings = m;
+        }
+    });
 }
 
 //
@@ -535,6 +609,8 @@ function collideShipWithEnemy(e)
         mode = 'TITLE';
         document.getElementById('highscore').innerHTML = zeroPadScore(highScore);
         document.getElementById('lastscore').innerHTML = zeroPadScore(curScore);
+        document.getElementById('overlay').style.display = '';
+        document.getElementById('config').style.display = 'none';
         document.getElementById('title').style.display = '';
         return true;
     }
@@ -568,7 +644,28 @@ function render() {
 
     renderer.shadowMapDarkness = 0.3;
 
-    function aimAndShoot(dir) {
+    function doMovement() {
+        var pad = navigator.getGamepads()[playerPad];
+        leftStick.set(pad.axes[mapping[0]], 0, pad.axes[mapping[1]]);
+        if (leftStick.length() < 0.25)
+            leftStick.set(0, 0, 0);
+        else {
+            leftStick.x = cube(leftStick.x);
+            leftStick.z = cube(leftStick.z);
+        }
+        shipVel.x = ease(shipVel.x, leftStick.x * 600, 0.2);
+        shipVel.z = ease(shipVel.z, leftStick.z * 600, 0.2);
+        ship.position.x += (shipVel.x + shipSuck.x) * delta;
+        ship.position.z += (shipVel.z + shipSuck.z) * delta;
+        shipSuck.set(0, 0, 0);
+    }
+
+    function doAiming() {
+        var pad = navigator.getGamepads()[playerPad];
+        rightStick.set(pad.axes[mapping[2]], 0, pad.axes[mapping[3]]);
+    }
+
+    function aimAndShoot() {
         var rightStickLen = rightStick.length();
         var rotTurret = true;
         if (fireCountDown > 0)
@@ -584,6 +681,33 @@ function render() {
         if (rotTurret)
             shipPivot.rotation.y = Math.atan2(rightStick.x, rightStick.z) + Math.PI;
 
+    }
+
+    function findButtonPress(pads) {
+        var possiblePadsLen = pads.length;
+        for (var i = 0; i < possiblePadsLen; ++i)
+        {
+            var pad = pads[i];
+            if (pad)
+            {
+                for (j = 0; j < pad.buttons.length && j < 4; ++j)
+                {
+                    if ((typeof(pad.buttons[j]) == "number" &&
+                         pad.buttons[j] > 0.5) ||
+                        pad.buttons[j].pressed)
+                    {
+                        return i;
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
+    function startGame() {
+        mode = 'GAME';
+        Sfx.play(Sfx.SELECT);
+        document.getElementById('title').style.display = 'none';
     }
 
     if (mode == 'TITLE')
@@ -609,50 +733,82 @@ function render() {
         var pads = navigator.getGamepads();
         if (pads)
         {
-            var possiblePadsLen = pads.length;
-            for (var i = 0; i < possiblePadsLen; ++i)
+            var foundPad = findButtonPress(pads);
+            if (foundPad != -1)
             {
-                var pad = pads[i];
-                if (pad)
+
+                playerPad = foundPad;
+                var pad = pads[foundPad];
+                waveIndex = -1;
+                curScore = 0;
+                updateScores();
+                if (findControllerMapping(pad))
                 {
-                    for (j = 0; j < pad.buttons.length && j < 4; ++j)
-                    {
-                        if ((typeof(pad.buttons[j]) == "number" &&
-                             pad.buttons[j] > 0.5) ||
-                            pad.buttons[j].pressed)
-                        {
-                            playerPad = i;
-                            waveIndex = -1;
-                            curScore = 0;
-                            updateScores();
-                            mode = 'GAME';
-                            Sfx.play(Sfx.SELECT);
-                            document.getElementById('title').style.display = 'none';
-                        }
-                    }
+                    startGame();
+                }
+                else
+                {
+                    mode = 'CONFIG';
+                    // Left stick axes are always 0, 1 on every
+                    // controller I've seen.
+                    mapping = [0, 1];
+                    configStep = 'RIGHT_X';
+                    lastAxes = [];
+                    showConfigStep();
+                    document.getElementById('overlay').style.display = 'none';
+                    document.getElementById('config').style.display = '';
                 }
             }
         }
     }
-    else
+    else if (mode == 'CONFIG')
     {
-        var pad = navigator.getGamepads()[playerPad];
-        leftStick.set(pad.axes[0], 0, pad.axes[1]);
-        if (leftStick.length() < 0.25)
-            leftStick.set(0, 0, 0);
-        else {
-            leftStick.x = cube(leftStick.x);
-            leftStick.z = cube(leftStick.z);
+        pad = navigator.getGamepads()[playerPad];
+        if (configStep == 'RIGHT_X' || configStep == 'RIGHT_Y')
+        {
+            var axis = findMinAxis(pad.axes);
+            if (axis != -1 && mapping.indexOf(axis) == -1 && axisSettled(axis))
+            {
+                mapping.push(axis);
+                if (configStep == 'RIGHT_X')
+                {
+                    configStep = 'RIGHT_Y';
+                    showConfigStep();
+                    lastAxes = [];
+                }
+                else
+                {
+                    configStep = 'TEST';
+                    showConfigStep();
+                }
+            }
         }
-        shipVel.x = ease(shipVel.x, leftStick.x * 600, 0.2);
-        shipVel.z = ease(shipVel.z, leftStick.z * 600, 0.2);
-        ship.position.x += (shipVel.x + shipSuck.x) * delta;
-        ship.position.z += (shipVel.z + shipSuck.z) * delta;
-        shipSuck.set(0, 0, 0);
+        else  // TEST
+        {
+            doMovement();
+            doAiming();
+            aimAndShoot();
+            foundPad = findButtonPress(navigator.getGamepads());
+            if (foundPad == playerPad)
+            {
+                // Save mapping in localStorage
+                localforage.getItem('mappings', function (m) {
+                    m = m || {};
+                    m[pad.id] = mapping;
+                    localforage.setItem('mappings', m);
+                });
+                savedMappings[pad.id] = mapping;
+                startGame();
+            }
+        }
+    }
+    else  // GAME
+    {
+        doMovement();
 
         spawnNewEnemies();
 
-        rightStick.set(pad.axes[2], 0, pad.axes[3]);
+        doAiming();
         aimAndShoot();
 
         var origY = ship.position.y;
