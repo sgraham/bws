@@ -28,6 +28,12 @@ var titleShootCounter = 0;
 
 var curScore = 0;
 var highScore = 0;
+localforage.getItem('highscore', function(h) {
+  if (h) {
+    highScore = h;
+    document.getElementById('highscore').innerHTML = zeroPadScore(h);
+  }
+});
 var textFaceMaterial = new THREE.MeshFaceMaterial();
 textMaterialFront = new THREE.MeshPhongMaterial({color: 0xffffff, shading: THREE.FlatShading});
 textMaterialSide = new THREE.MeshPhongMaterial({color: 0xffffff, shading: THREE.SmoothShading});
@@ -152,20 +158,26 @@ function zeroPadScore(n)
 
 function updateScores()
 {
-  if (curScore > highScore)
-  {
-    highScore = curScore;
-  }
-  var scoreStr = zeroPadScore(curScore);
-  for (var i = 0; i < numScoreDigits; ++i)
-  {
-    var num = scoreStr[i] - '0';
-    scene.remove(textMeshes[i]);
-    textMeshes[i] = addObjectColor(textGeos[num], 0xffffff, (i - numScoreDigits / 2) * 100, 80, -1200);
-    textMeshes[i].receiveShadow = false;
-    // hmm, some update lameness going on here, gunk at origin for 1 frame w/ shadows on
-    textMeshes[i].castShadow = false;
-  }
+  localforage.getItem('highscore', function(h) {
+    if (h) {
+      highScore = h;
+    }
+    if (curScore > highScore)
+    {
+      highScore = curScore;
+      localforage.setItem('highscore', highScore);
+    }
+    var scoreStr = zeroPadScore(curScore);
+    for (var i = 0; i < numScoreDigits; ++i)
+    {
+      var num = scoreStr[i] - '0';
+      scene.remove(textMeshes[i]);
+      textMeshes[i] = addObjectColor(textGeos[num], 0xffffff, (i - numScoreDigits / 2) * 100, 80, -1200);
+      textMeshes[i].receiveShadow = false;
+      // hmm, some update lameness going on here, gunk at origin for 1 frame w/ shadows on
+      textMeshes[i].castShadow = false;
+    }
+  });
 }
 
 
