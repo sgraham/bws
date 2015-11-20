@@ -273,6 +273,7 @@ function init()
 
   var wallGeom = new THREE.CubeGeometry(25, 70, 5);
   var wallMat = new THREE.MeshPhongMaterial({shininess: 80, ambient: 0x88aa88, color: 0xffffff, specular: 0xffffff, map: textureSquares});
+  
   walls = [];
   var count = 0;
   for (var i = 0; i < 2 * Math.PI; i += Math.PI / 16)
@@ -372,7 +373,7 @@ function init()
   //
 
   renderer.shadowMapAutoUpdate = false;
-  renderer.shadowMapEnabled = true;
+  renderer.shadowMap.Enabled = true;
   renderer.shadowMapDarkness = 0.5 * sunIntensity;
   renderer.shadowMapBias = 0.00390125;
   renderer.shadowMapWidth = 1024;
@@ -865,8 +866,7 @@ function render() {
 
   renderer.autoUpdateObjects = false;
 
-  renderer.initWebGLObjects(scene);
-  renderer.updateShadowMap(scene, camera);
+  renderer.render(scene, camera);
 
   // render scene
 
