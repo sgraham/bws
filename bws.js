@@ -50,7 +50,7 @@ var playerPad = -1;
 var leftStick, rightStick;
 var mapping = null;
 var savedMappings = {};
-var lastAxes = [];
+var lastAxes = 99;
 
 if (!('getGamepads' in navigator) && 'webkitGetGamepads' in navigator) {
   navigator.getGamepads = function() {
@@ -60,7 +60,7 @@ if (!('getGamepads' in navigator) && 'webkitGetGamepads' in navigator) {
 
 function findControllerMapping(pad)
 {
-  if (pad.mapping === 'standard' || pad.id.match('STANDARD GAMEPAD'))
+  if (pad.mapping === 'standard' || pad.id.match('STANDARD GAMEPAD') || pad.id.match('USB'))
   {
     mapping = [0, 1, 2, 3];
     return true;
@@ -76,33 +76,24 @@ function findControllerMapping(pad)
   return false;
 }
 
+function isInt(n) {
+   return n === +n && n === (n|0);
+}
+
 function findMinAxis(axes)
 {
-  var m = -0.25;
-  var axis = -1;
+  var axis = 99;
   for (var i = 0; i < axes.length; i++)
   {
-    if (axes[i] < m && axes[i] >= -1.0)
+    if (isInt(axes[i]) && axes[i] !== 0 && lastAxes !== axes[i])
     {
-      m = axes[i];
       axis = i;
+      m = axes[i];
+      lastAxes = axes[i];
     }
   }
   return axis;
 }
-
-function axisSettled(axis)
-{
-  lastAxes.push(axis);
-  if (lastAxes.length < 10)
-    return false;
-
-  lastAxes = lastAxes.slice(lastAxes.length - 10);
-  return lastAxes.every(function(a) {
-    return a === axis;
-  });
-}
-
 function showConfigStep()
 {
   var steps = document.querySelectorAll('#config > h3[id]');
@@ -110,7 +101,7 @@ function showConfigStep()
   {
     if (steps[i].id === 'CONFIG_' + configStep)
     {
-      steps[i].style.display = '';
+      steps[i].style.display = 'block';
     }
     else
     {
@@ -273,7 +264,6 @@ function init()
 
   var wallGeom = new THREE.CubeGeometry(25, 70, 5);
   var wallMat = new THREE.MeshPhongMaterial({shininess: 80, ambient: 0x88aa88, color: 0xffffff, specular: 0xffffff, map: textureSquares});
-  
   walls = [];
   var count = 0;
   for (var i = 0; i < 2 * Math.PI; i += Math.PI / 16)
@@ -369,11 +359,8 @@ function init()
 
   container.appendChild(renderer.domElement);
 
-
-  //
-
   renderer.shadowMapAutoUpdate = false;
-  renderer.shadowMap.Enabled = true;
+  renderer.shadowMapEnabled = true;
   renderer.shadowMapDarkness = 0.5 * sunIntensity;
   renderer.shadowMapBias = 0.00390125;
   renderer.shadowMapWidth = 1024;
@@ -637,9 +624,9 @@ function collideShipWithEnemy(e)
     mode = 'TITLE';
     document.getElementById('highscore').innerHTML = zeroPadScore(highScore);
     document.getElementById('lastscore').innerHTML = zeroPadScore(curScore);
-    document.getElementById('overlay').style.display = '';
+    document.getElementById('overlay').style.display = 'block';
     document.getElementById('config').style.display = 'none';
-    document.getElementById('title').style.display = '';
+    document.getElementById('title').style.display = 'block';
     return true;
   }
   return false;
@@ -662,8 +649,6 @@ function render() {
   TWEEN.update();
 
   var delta = clock.getDelta();
-  //console.log(delta);
-
   scene.fog.color.setHSL(0.13, 0.25, THREE.Math.mapLinear(parameters.control, 0, 100, 0.1, 0.4));
   renderer.setClearColor(scene.fog.color, 1);
 
@@ -783,10 +768,9 @@ function render() {
           // controller I've seen.
           mapping = [0, 1];
           configStep = 'RIGHT_X';
-          lastAxes = [];
           showConfigStep();
           document.getElementById('overlay').style.display = 'none';
-          document.getElementById('config').style.display = '';
+          document.getElementById('config').style.display = 'block';
         }
       }
     }
@@ -797,14 +781,13 @@ function render() {
     if (configStep === 'RIGHT_X' || configStep === 'RIGHT_Y')
     {
       var axis = findMinAxis(pad.axes);
-      if (axis !== -1 && mapping.indexOf(axis) === -1 && axisSettled(axis))
+      if (axis !== 99)
       {
         mapping.push(axis);
         if (configStep === 'RIGHT_X')
         {
           configStep = 'RIGHT_Y';
           showConfigStep();
-          lastAxes = [];
         }
         else
         {
@@ -821,14 +804,15 @@ function render() {
       foundPad = findButtonPress(navigator.getGamepads());
       if (foundPad === playerPad)
       {
-        // Save mapping in localStorage
+        savedMappings[pad.id] = mapping;
+        startGame();
+      } else {
+          // Save mapping in localStorage
         localforage.getItem('mappings', function(m) {
           m = m || {};
           m[pad.id] = mapping;
           localforage.setItem('mappings', m);
         });
-        savedMappings[pad.id] = mapping;
-        startGame();
       }
     }
   }
@@ -855,10 +839,6 @@ function render() {
   updateBullets(delta);
   updateExplosions(delta);
 
-  //console.log(clock.getElapsedTime());
-  //weewaa.rotation.y = clock.getElapsedTime();
-  //weewaa.position.x = Math.sin(clock.getElapsedTime() / 100.0) * 50;
-
   camera.position.set(100, 1000, ship.position.z / 3 + 1500);
   camera.lookAt(new THREE.Vector3(ship.position.x / 6.0, 0, ship.position.z / 6.0));
 
@@ -866,14 +846,13 @@ function render() {
 
   renderer.autoUpdateObjects = false;
 
-  renderer.render(scene, camera);
+  renderer.initWebGLObjects(scene);
+  renderer.updateShadowMap(scene, camera);
 
   // render scene
 
   renderer.autoUpdateObjects = true;
 
-  //renderer.render( scene, camera );
-  //renderer.clearTarget( null, 1, 1, 1 );
   composer.render(0.1);
 
 }
