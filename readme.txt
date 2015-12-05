@@ -12,6 +12,10 @@ reliably).
 
 Also needs a moderately decent video card for WebGL to not suck too much.
 
+Keys
+--------------------------------------------------------
+
+R - reset the gamepad settings
 
 Credits
 -------
@@ -23,6 +27,8 @@ examples.
 Any of the code I wrote is public domain.
 
 Sound effects made in http://www.bfxr.net/.
+
+Mte90 - Added the reset gamepad key, score support
 
 Texture from http://subtlepatterns.com/ Licensed under a Creative Commons
 Attribution 3.0 Unported License: http://creativecommons.org/licenses/by/3.0/

@@ -7,7 +7,7 @@
         <style type="text/css">
             body {
                 border: 0; padding: 0; margin: 0;
-                font-family: 'Segoe UI', 'Helvetica Neue', 'Arial';
+                font-family: 'Arial';
                 font-size: 32px;
                 color: #fff;
                 background: black;
@@ -16,6 +16,9 @@
                 color: #aaa;
                 cursor: pointer;
             }
+			p {
+				color: #aaa;
+			}
             #title {
                 position: absolute;
                 text-align: center;
@@ -28,25 +31,16 @@
                 margin: auto;
                 -webkit-user-select: none;
                 -khtml-user-select: none;
-                -moz-user-select: none;
                 -o-user-select: none;
                 user-select: none;
                 cursor: default;
             }
+			#config, #CONFIG_RIGHT_X, #CONFIG_RIGHT_Y, #CONFIG_TEST {
+				display:none
+			}
         </style>
-<script type="text/javascript">
-
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-27474263-1']);
-  _gaq.push(['_trackPageview']);
-
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
-
-</script>
+		<link rel="resource" type="application/l10n" href="locales/locales.ini" />
+		<script src="l10n.js"></script>
 	</head>
 	<body>
 		<script src="three/three.min.js"></script>
@@ -60,60 +54,63 @@
 		<script src="three/SavePass.js"></script>
 		<script src="three/Detector.js"></script>
 		<script src="three/RequestAnimationFrame.js"></script>
-        <script src="helvetiker_bold.typeface.js"></script>
+		<script src="three/helvetiker_regular.typeface.js"></script>
+		<script src="three/helvetiker_bold.typeface.js"></script>
         <script src="Tween.js"></script>
         <script src="sfx.js"></script>
         <script src="localforage.js"></script>
         <script src="enemies.js"></script>
         <script src="waves.js"></script>
-        <script src="bws.js"></script>
+		<script src="bws.js"></script>
         <div id="title">
-        <div id="overlay">
-            <h1>
-                Boxes Wot Shoot
-            </h1>
+			<div id="overlay">
+				<h1>
+					Boxes Wot Shoot
+				</h1>
 
-            <h3>
-                Use left stick to move, right stick to shoot.
-                Press a button on your gamepad to begin. 
-            </h3>
+				<h3 data-l10n-id="instruction">
+					Use left stick to move, right stick to shoot.
+					Press a button on your gamepad to begin. 
+				</h3>
 
-            <h5>High score: <span id="highscore">000000</h5>
-            <h5>Last score: <span id="lastscore">000000</h5>
+				<h5><span data-l10n-id="highscore">High score</span>: <span id="highscore">000000</h5>
+				<h5><span data-l10n-id="lastscore">Last score</span>: <span id="lastscore">000000</h5>
 
-            <p style="font-size: 24px; color: #aaa">
-                Gamepad API required. Currently available in
-                <a href="https://www.google.com/intl/en/chrome/browser/">Chrome</a>             and <a href="https://mozilla.org/firefox/">Firefox</a>.
-                Hit F11 for the full experience.
-            </p>
-            <p style="font-size: 14px; color: #aaa">
-                <a href="http://h4ck3r.net/">Scott Graham</a>
-                &bull; <a href="http://twitter.com/h4kr">@h4kr</a>
-                &bull; <a href="https://dvcs.w3.org/hg/gamepad/raw-file/default/gamepad.html">Gamepad draft API spec</a>
-                &bull; <a href="http://mrdoob.github.com/three.js/">three.js</a>
-            </p>
-        </div>
-        <div id="config" style="display:none">
-            <h1>
-                Configure your Controller
-            </h1>
+				<p style="font-size: 24px;">
+					<span data-l10n-id="requirement-1">Gamepad API required. Currently available in</span>
+					<a href="https://www.google.com/intl/en/chrome/browser/">Chrome</a> 
+					<span data-l10n-id="requirement-2">and</span> 
+					<a href="https://mozilla.org/firefox/">Firefox</a>.
+					<span data-l10n-id="requirement-3">Hit F11 for the full experience.</span>
+				</p>
+				<p style="font-size: 14px;">
+					<a href="http://h4ck3r.net/">Scott Graham</a>
+					&bull; <a href="http://twitter.com/h4kr">@h4kr</a>
+					&bull; <a href="https://dvcs.w3.org/hg/gamepad/raw-file/default/gamepad.html">Gamepad draft API spec</a>
+					&bull; <a href="http://mrdoob.github.com/three.js/">three.js</a>
+				</p>
+			</div>
+			<div id="config">
+				<h1 data-l10n-id="requirement">
+					Configure your Controller
+				</h1>
 
-            <h3>
-              I don't recognize your controller, help me out a little.
-            </h3>
+				<h3 data-l10n-id="controller">
+					I don't recognize your controller, help me out a little.
+				</h3>
 
-            <h3 id="CONFIG_RIGHT_X" style="display:none">
-              Push and hold left on the right analog stick.
-            </h3>
-            <h3 id="CONFIG_RIGHT_Y" style="display:none">
-              Now push and hold up on the right analog stick.
-            </h3>
-            <h3 id="CONFIG_TEST" style="display:none">
-              Great! Now try moving and shooting. Use the left stick to move,
-              and the right stick to shoot.
-              If it all looks good, press any button to start.
-            </h3>
-        </div>
+				<h3 id="CONFIG_RIGHT_X" data-l10n-id="config-right-x">
+					Push and hold left on the right analog stick.
+				</h3>
+				<h3 id="CONFIG_RIGHT_Y" data-l10n-id="config-right-y">
+					Now push and hold up on the right analog stick.
+				</h3>
+				<h3 id="CONFIG_TEST" data-l10n-id="config-test">
+					Great! Now try moving and shooting. Use the left stick to move,
+					and the right stick to shoot.
+					If it all looks good, press any button to start.
+				</h3>
+			</div>
 	</body>
 </html>
 
